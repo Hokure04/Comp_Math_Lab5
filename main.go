@@ -73,54 +73,88 @@ func hand_input() {
 	fmt.Println("X: ", xValues)
 	fmt.Println("Y: ", yValues)
 
-	var intX float64
+	var floatX float64
 	var err error
 	for {
 		fmt.Print("Введите значение x для расчёта значаения: ")
 		argumentX := bufio.NewScanner(os.Stdin)
 		argumentX.Scan()
 		inputX := argumentX.Text()
-		intX, err = strconv.ParseFloat(inputX, 64)
+		floatX, err = strconv.ParseFloat(inputX, 64)
 		if err == nil {
 			break
 		}
 		fmt.Println("Ошибка: X должно быть целым числом")
 	}
-
-	lagrange_polynominal(xValues, yValues, intX)
+	fmt.Println()
+	lagrange_polynominal(xValues, yValues, floatX)
+	newton_polynomial_divided_differences(xValues, yValues, floatX)
 
 }
 
 func lagrange_polynominal(xValues, yValues []float64, argX float64) {
-	var i int
 	var l []float64
-	for i < len(xValues) {
+	for i := 0; i < len(xValues); i++ {
 		var numerator float64 = 1
 		var denominator float64 = 1
 
-		j := 0
-		for j < len(xValues) {
+		for j := 0; j < len(xValues); j++ {
 			if j != i {
 				numerator *= argX - xValues[j]
 				denominator *= xValues[i] - xValues[j]
 			}
-			j += 1
 		}
 
 		//fmt.Println(numerator)
 		//fmt.Println(denominator)
 		l = append(l, numerator/denominator*yValues[i])
-		i += 1
 	}
 	fmt.Println(l)
 	var interpolation float64
-	i = 0
-	for i < len(l) {
+	for i := 0; i < len(l); i++ {
 		interpolation += l[i]
-		i += 1
 	}
 	fmt.Printf("Приближенное значение функции по Лагранжу: %f\n", interpolation)
+	fmt.Println()
+}
 
+func newton_polynomial_divided_differences(xValues, yValues []float64, argX float64) {
+	n := len(xValues)
+	//sum := yValues[0]
+	f := dividedDifferences(xValues, yValues)
+	fmt.Println(f)
+	for i := 0; i < n; i++ {
+		var finiteDifferences []float64
+		var intermediateCalc float64 = 1
+		for j := 0; j < i; j++ {
+			intermediateCalc *= argX - xValues[j]
+			finiteDifferences = append(finiteDifferences, intermediateCalc)
+		}
+		if i != 0 {
+			f[i] = f[i] * finiteDifferences[i-1]
+		}
+	}
+	var interpolation float64
+	for i := 0; i < len(f); i++ {
+		interpolation += f[i]
+	}
+	fmt.Printf("Приближённое значение функции по Ньютону с разделёнными разностями: %f\n", interpolation)
+	fmt.Println()
+}
+
+func dividedDifferences(x, y []float64) []float64 {
+	n := len(x)
+	f := make([]float64, n)
+
+	for i := 0; i < n; i++ {
+		f[i] = y[i]
+	}
+	for i := 1; i < n; i++ {
+		for j := n - 1; j >= i; j-- {
+			f[j] = (f[j] - f[j-1]) / (x[j] - x[j-i])
+		}
+	}
+	return f
 }
 
 func draw_function() {
