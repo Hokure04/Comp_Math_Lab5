@@ -141,7 +141,6 @@ func read_from_file() {
 		fmt.Println("Введённые значения:")
 		fmt.Println("X: ", xValues)
 		fmt.Println("Y: ", yValues)
-		fmt.Println()
 
 		var floatX float64
 		var inputX string
@@ -240,8 +239,7 @@ func newton_polynomial_equally_spaced_notes(xValues, yValues []float64, argX flo
 	for i := 0; i < len(xValues); i++ {
 		if math.Abs(argX-xValues[i]) < differences {
 			differences = argX - xValues[i]
-			fmt.Println(xValues[i])
-			y0 = xValues[i]
+			y0 = yValues[i]
 		}
 	}
 
@@ -263,32 +261,54 @@ func newton_polynomial_equally_spaced_notes(xValues, yValues []float64, argX flo
 	w.Flush()
 
 	var yArray []float64
-	for _, row := range deltaY {
-		//fmt.Printf("row: %f", row)
-		if row[0] == y0 {
-			yArray = append(yArray, row...)
+	if t > 0 {
+		for _, row := range deltaY {
+			//fmt.Printf("row: %f", row)
+			//fmt.Println(y0)
+			if row[0] == y0 {
+				yArray = append(yArray, row...)
+			}
+		}
+	} else {
+		var indices []int
+		for i, row := range deltaY {
+			if row[0] == y0 {
+				indices = append(indices, i)
+			}
+		}
+
+		// Формируем одномерный массив
+		for _, rowIndex := range indices {
+			yArray = append(yArray, deltaY[rowIndex][0])
+			for j := 1; j < len(deltaY[0]); j++ {
+				if rowIndex > 0 {
+					rowIndex--
+					yArray = append(yArray, deltaY[rowIndex][j])
+				}
+			}
 		}
 	}
+
 	fmt.Printf("Массив y: %f\n", yArray)
 	var Nx float64
 	var tIteration float64 = 1
 	var factorial int = 1
 	Nx += y0
-	if t > 0 {
-		for i := 0; i < len(yArray); i++ {
-			if i != 0 {
-				if i == 0 {
-					tIteration *= t
-					Nx += yArray[i] * tIteration
-				} else {
-					if t > 0 {
-						tIteration = tIteration * (t - float64(i-1))
-					} else if t < 0 {
-						tIteration = tIteration * (t + float64(i-1))
-					}
-					factorial *= i
-					Nx += (yArray[i] * tIteration) / float64(factorial)
+	for i := 0; i < len(yArray); i++ {
+		if i != 0 {
+			if i == 0 {
+				tIteration *= t
+				Nx += yArray[i] * tIteration
+			} else {
+				if t > 0 {
+					tIteration = tIteration * (t - float64(i-1))
+				} else if t < 0 {
+					//fmt.Printf("titeration: %f", tIteration)
+					tIteration = tIteration * (t + float64(i-1))
+					//fmt.Printf("tIteration: %f", tIteration)
 				}
+				factorial *= i
+				Nx += (yArray[i] * tIteration) / float64(factorial)
 			}
 		}
 	}
