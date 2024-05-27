@@ -19,6 +19,17 @@ func main() {
 	input_selection()
 }
 
+func function(choice int, x float64) float64 {
+	if choice == 1 {
+		return 2*math.Pow(x, 2) - 5*x
+	} else if choice == 2 {
+		return math.Sin(x)
+	} else if choice == 3 {
+		return math.Sqrt(x)
+	}
+	return 0
+}
+
 func input_selection() {
 	for {
 		fmt.Println("1. Ввести набор точек")
@@ -39,7 +50,7 @@ func input_selection() {
 		} else if choiceInt == 2 {
 			read_from_file()
 		} else if choiceInt == 3 {
-			fmt.Println("Заглушка 3")
+			input_from_function()
 		} else {
 			fmt.Println("Введите значение от 1 до 3")
 		}
@@ -141,6 +152,98 @@ func read_from_file() {
 		fmt.Println("Введённые значения:")
 		fmt.Println("X: ", xValues)
 		fmt.Println("Y: ", yValues)
+
+		var floatX float64
+		var inputX string
+		for {
+			fmt.Print("Введите значение x для расчёта значения: ")
+			argumentX := bufio.NewScanner(os.Stdin)
+			argumentX.Scan()
+			inputX = argumentX.Text()
+			floatX, err = strconv.ParseFloat(inputX, 64)
+			if err == nil {
+				break
+			}
+			fmt.Println("Ошибка: X должно быть числом")
+		}
+		lagrange_polynominal(xValues, yValues, floatX)
+		newton_polynomial_divided_differences(xValues, yValues, floatX)
+		newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
+		break
+	}
+}
+
+func input_from_function() {
+	var xValues []float64
+	var yValues []float64
+
+	fmt.Println("Выберите функцию, которую хотите использовать:")
+	fmt.Println("1. 2*x^2 - 5*x")
+	fmt.Println("2. sin(x)")
+	fmt.Println("3. √x")
+
+	for {
+		choice := bufio.NewScanner(os.Stdin)
+		choice.Scan()
+		input := choice.Text()
+
+		var choiceInt int
+		_, err := fmt.Sscanf(input, "%d", &choiceInt)
+		if err != nil {
+			fmt.Println("Ошибка: Вы ввели некорректное значение")
+			continue
+		}
+
+		if choiceInt > 3 || choiceInt < 1 {
+			fmt.Println("Введите значение от 1 до 3")
+			continue
+		}
+
+		fmt.Print("Введите количество точек: ")
+		pointsStr := bufio.NewScanner(os.Stdin)
+		pointsStr.Scan()
+		pointsInput := pointsStr.Text()
+		points, err := strconv.Atoi(pointsInput)
+		if err != nil || points <= 2 {
+			fmt.Println("Ошибка: Количество точек должно быть больше 2")
+			continue
+		}
+
+		var a, b float64
+		for {
+			fmt.Print("Введите интервал (a b): ")
+			intervalStr := bufio.NewScanner(os.Stdin)
+			intervalStr.Scan()
+			intervalInput := intervalStr.Text()
+			intervalParts := strings.Split(intervalInput, " ")
+			if len(intervalParts) != 2 {
+				fmt.Println("Ошибка: Вы ввели некорректный интервал")
+				continue
+			}
+			a, err = strconv.ParseFloat(intervalParts[0], 64)
+			if err != nil {
+				fmt.Println("Ошибка: Вы ввели некорректный интервал")
+				continue
+			}
+			b, err = strconv.ParseFloat(intervalParts[1], 64)
+			if err != nil {
+				fmt.Println("Ошибка: Вы ввели некорректный интервал")
+				continue
+			}
+			break
+		}
+
+		h := (b - a) / float64(points-1)
+
+		for i := 0; i < points; i++ {
+			xValues = append(xValues, a+h*float64(i))
+			yValues = append(yValues, function(choiceInt, xValues[i]))
+		}
+
+		fmt.Println("Введённые значения:")
+		fmt.Println("X: ", xValues)
+		fmt.Println("Y: ", yValues)
+		fmt.Println()
 
 		var floatX float64
 		var inputX string
@@ -277,7 +380,6 @@ func newton_polynomial_equally_spaced_notes(xValues, yValues []float64, argX flo
 			}
 		}
 
-		// Формируем одномерный массив
 		for _, rowIndex := range indices {
 			yArray = append(yArray, deltaY[rowIndex][0])
 			for j := 1; j < len(deltaY[0]); j++ {
