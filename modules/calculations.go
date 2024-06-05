@@ -2,6 +2,7 @@ package modules
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"text/tabwriter"
 )
@@ -24,6 +25,7 @@ func Lagrange_polynominal(xValues, yValues []float64, argX float64) {
 		l = append(l, numerator/denominator*yValues[i])
 	}
 	fmt.Println(l)
+	fmt.Println()
 	var interpolation float64
 	for i := 0; i < len(l); i++ {
 		interpolation += l[i]
@@ -150,4 +152,111 @@ func t_calculate(t float64, n int, isLessThanZero bool) float64 {
 		}
 	}
 	return result
+}
+
+func Stirling_polynomial(xValues, yValues []float64, argX float64) {
+	var x0 int
+	var factorial float64 = 1
+	var pr_number int
+	if len(xValues) == 0 {
+		panic("xValues is empty")
+	}
+	n := len(xValues)
+	h := xValues[1] - xValues[0]
+
+	array := make([][]float64, n)
+	for i := 0; i < n; i++ {
+		array[i] = make([]float64, n)
+		array[i][0] = yValues[i]
+	}
+	for i := 1; i < n; i++ {
+		for j := 0; j < n-i; j++ {
+			array[j][i] = array[j+1][i-1] - array[j][i-1]
+		}
+	}
+	if n%2 == 0 {
+		x0 = int(n/2 - 1)
+	} else {
+		x0 = int(n / 2)
+	}
+
+	t := (argX - xValues[x0]) / h
+	if math.Abs(t) > 0.25 {
+		fmt.Println("Так как t > 0.25, результат метода может быть неточным")
+	}
+
+	interpolation := array[x0][0]
+	compT1 := t
+	compT2 := math.Pow(t, 2)
+	pr_number = 0
+	for i := 1; i < n; i++ {
+		factorial *= float64(i)
+		if i%2 == 0 {
+			if x0-(i/2) < 0 {
+				break
+			}
+			interpolation += (compT2 / factorial) * array[x0-(i/2)][i]
+			compT2 *= t*t - float64(pr_number*pr_number)
+		} else {
+			if x0-((i+1)/2) < 0 {
+				break
+			}
+			if x0-(((i+1)/2)-1) < 0 {
+				break
+			}
+			interpolation += (compT1 / factorial) * ((array[x0-((i+1)/2)][i] + array[x0-(((i+1)/2)-1)][i]) / 2)
+			pr_number += 1
+			compT1 *= t*t - float64(pr_number*pr_number)
+		}
+	}
+	fmt.Printf("Приближенное значение функции по Стирлингу: %f\n", interpolation)
+	fmt.Println()
+}
+
+func Bessel_polynomila(xValues, yValues []float64, argX float64) {
+	var x0 int
+	var lastNumber float64
+	var factorial float64 = 1
+	if len(xValues) == 0 {
+		panic("xValues is empty")
+	}
+	n := len(xValues)
+	h := xValues[1] - xValues[0]
+	array := make([][]float64, n)
+	for i := 0; i < n; i++ {
+		array[i] = make([]float64, n)
+		array[i][0] = yValues[i]
+	}
+	for i := 1; i < n; i++ {
+		for j := 0; j < n-i; j++ {
+			array[j][i] = array[j+1][i-1] - array[j][i-1]
+		}
+	}
+	if n%2 == 0 {
+		x0 = int(n/2 - 1)
+	} else {
+		x0 = int(n / 2)
+	}
+	t := (argX - xValues[x0]) / h
+	if math.Abs(t) < 0.25 {
+		fmt.Println("Так как t < 0.25, результат метода может быть неточным")
+	} else if math.Abs(t) > 0.75 {
+		fmt.Println("Так как t > 0.75, результат метода может быть неточным")
+	}
+	interpolation := ((array[x0][0] + array[x0+1][0]) / 2) + (t-0.5)*array[x0][1]
+	compT := t
+	lastNumber = 0
+	for i := 2; i < n; i++ {
+		factorial *= float64(i)
+		if i%2 == 0 {
+			lastNumber += 1
+			compT *= t - lastNumber
+			interpolation += (compT / factorial) * (array[x0-i/2][i] + array[x0-((i/2)-1)][i]) / 2
+		} else {
+			interpolation += (compT * (t - 0.5) / factorial) * array[x0-((i-1)/2)][i]
+			compT *= t + lastNumber
+		}
+	}
+	fmt.Printf("Приближенное значение функции по Бесселю: %f\n", interpolation)
+	fmt.Println()
 }

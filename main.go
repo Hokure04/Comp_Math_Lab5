@@ -105,12 +105,14 @@ func hand_input() {
 	}
 	fmt.Println()
 	modules.Lagrange_polynominal(xValues, yValues, floatX)
-	answer2 := modules.Newton_polynomial_divided_differences(xValues, yValues, floatX)
-	fmt.Printf("Приближённое значение функции по Ньютону с разделёнными разностями: %f\n", answer2)
+	newton1 := modules.Newton_polynomial_divided_differences(xValues, yValues, floatX)
+	fmt.Printf("Приближённое значение функции по Ньютону с разделёнными разностями: %f\n", newton1)
 	fmt.Println()
-	answer3 := modules.Newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
-	fmt.Printf("Приближённое значение функции по Ньютону для равноотстоящих узлов: %f\n", answer3)
+	newton2 := modules.Newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
+	fmt.Printf("Приближённое значение функции по Ньютону для равноотстоящих узлов: %f\n", newton2)
 	fmt.Println()
+	modules.Stirling_polynomial(xValues, yValues, floatX)
+	modules.Bessel_polynomila(xValues, yValues, floatX)
 }
 
 func read_from_file() {
@@ -175,12 +177,14 @@ func read_from_file() {
 		}
 		fmt.Println()
 		modules.Lagrange_polynominal(xValues, yValues, floatX)
-		answer2 := modules.Newton_polynomial_divided_differences(xValues, yValues, floatX)
-		fmt.Printf("Приближённое значение функции по Ньютону с разделёнными разностями: %f\n", answer2)
+		newton1 := modules.Newton_polynomial_divided_differences(xValues, yValues, floatX)
+		fmt.Printf("Приближённое значение функции по Ньютону с разделёнными разностями: %f\n", newton1)
 		fmt.Println()
-		answer3 := modules.Newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
-		fmt.Printf("Приближённое значение функции по Ньютону для равноотстоящих узлов: %f\n", answer3)
+		newton2 := modules.Newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
+		fmt.Printf("Приближённое значение функции по Ньютону для равноотстоящих узлов: %f\n", newton2)
 		fmt.Println()
+		modules.Stirling_polynomial(xValues, yValues, floatX)
+		modules.Bessel_polynomila(xValues, yValues, floatX)
 		break
 	}
 }
@@ -272,14 +276,15 @@ func input_from_function() {
 		}
 		fmt.Println()
 		modules.Lagrange_polynominal(xValues, yValues, floatX)
-		answer2 := modules.Newton_polynomial_divided_differences(xValues, yValues, floatX)
-		fmt.Printf("Приближённое значение функции по Ньютону с разделёнными разностями: %f\n", answer2)
+		newton1 := modules.Newton_polynomial_divided_differences(xValues, yValues, floatX)
+		fmt.Printf("Приближённое значение функции по Ньютону с разделёнными разностями: %f\n", newton1)
 		fmt.Println()
-		answer3 := modules.Newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
-		fmt.Printf("Приближённое значение функции по Ньютону для равноотстоящих узлов: %f\n", answer3)
+		newton2 := modules.Newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
+		fmt.Printf("Приближённое значение функции по Ньютону для равноотстоящих узлов: %f\n", newton2)
 		fmt.Println()
+		modules.Stirling_polynomial(xValues, yValues, floatX)
+		modules.Bessel_polynomila(xValues, yValues, floatX)
 		DrawGraph(xValues, yValues, choiceInt)
-
 		break
 	}
 }
