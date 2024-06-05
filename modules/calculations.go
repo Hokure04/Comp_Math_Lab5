@@ -2,7 +2,6 @@ package modules
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"text/tabwriter"
 )
@@ -33,11 +32,9 @@ func Lagrange_polynominal(xValues, yValues []float64, argX float64) {
 	fmt.Println()
 }
 
-func Newton_polynomial_divided_differences(xValues, yValues []float64, argX float64) {
+func Newton_polynomial_divided_differences(xValues, yValues []float64, argX float64) float64 {
 	n := len(xValues)
-	//sum := yValues[0]
 	f := dividedDifferences(xValues, yValues)
-	fmt.Println(f)
 	for i := 0; i < n; i++ {
 		var finiteDifferences []float64
 		var intermediateCalc float64 = 1
@@ -53,8 +50,7 @@ func Newton_polynomial_divided_differences(xValues, yValues []float64, argX floa
 	for i := 0; i < len(f); i++ {
 		interpolation += f[i]
 	}
-	fmt.Printf("Приближённое значение функции по Ньютону с разделёнными разностями: %f\n", interpolation)
-	fmt.Println()
+	return interpolation
 }
 
 func dividedDifferences(x, y []float64) []float64 {
@@ -73,109 +69,85 @@ func dividedDifferences(x, y []float64) []float64 {
 }
 
 func Newton_polynomial_equally_spaced_notes(xValues, yValues []float64, argX float64) float64 {
-	var t float64
-	var h float64
-	var differences float64
-	var y0 float64
-	differences = argX - xValues[0]
-	y0 = yValues[0]
-	h = (xValues[len(xValues)-1] - xValues[0]) / float64(len(xValues)-1)
-	fmt.Printf("Значение шага h: %f\n", h)
-	for i := 0; i < len(xValues); i++ {
-		if math.Abs(argX-xValues[i]) < differences {
-			differences = argX - xValues[i]
-			y0 = yValues[i]
+	var x0 int
+	var isLessThanZero bool
+	var factorial float64 = 1
+	var result float64
+	if len(xValues) == 0 {
+		panic("xValues is empty")
+	}
+
+	n := len(xValues)
+	h := xValues[1] - xValues[0]
+	array := make([][]float64, n)
+
+	for i := 0; i < n; i++ {
+		array[i] = make([]float64, n)
+		array[i][0] = yValues[i]
+	}
+	for i := 1; i < n; i++ {
+		for j := 0; j < n-i; j++ {
+			array[j][i] = array[j+1][i-1] - array[j][i-1]
 		}
 	}
 
-	t = differences / h
-	fmt.Printf("Значение параметра t: %f\n", t)
-
-	deltaY := finiteDifferences(yValues)
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.AlignRight|tabwriter.Debug)
 	fmt.Fprintln(w, "№\ty\tΔyi\tΔ^2yi\tΔ^3yi\tΔ^4yi")
 	fmt.Fprintln(w, "-----\t-----\t----------\t---------\t----------\t----------")
 
-	for i := range deltaY {
+	for i := range array {
 		fmt.Fprintf(w, "%d", i)
-		for _, value := range deltaY[i] {
+		for _, value := range array[i] {
 			fmt.Fprintf(w, "\t%.4f", value)
 		}
 		fmt.Fprintln(w)
 	}
 	w.Flush()
 
-	var yArray []float64
-	if t > 0 {
-		for _, row := range deltaY {
-			//fmt.Printf("row: %f", row)
-			//fmt.Println(y0)
-			if row[0] == y0 {
-				yArray = append(yArray, row...)
+	if argX <= xValues[n/2] {
+		isLessThanZero = true
+		x0 = n - 1
+		for i := 0; i < n; i++ {
+			if argX <= xValues[i] {
+				x0 = i - 1
+				break
 			}
+		}
+		if x0 < 0 {
+			x0 = 0
+		}
+		t := (argX - xValues[x0]) / h
+		//fmt.Printf("Значение t: %f\n", t)
+		result = array[x0][0]
+		//fmt.Printf("Значение result= %f\n", result)
+		for i := 1; i < n; i++ {
+			factorial *= float64(i)
+			result += (t_calculate(t, i, isLessThanZero) * array[x0][i]) / factorial
+			//fmt.Printf("Значение result= %f\n", result)
 		}
 	} else {
-		var indices []int
-		for i, row := range deltaY {
-			if row[0] == y0 {
-				indices = append(indices, i)
-			}
-		}
-
-		for _, rowIndex := range indices {
-			yArray = append(yArray, deltaY[rowIndex][0])
-			for j := 1; j < len(deltaY[0]); j++ {
-				if rowIndex > 0 {
-					rowIndex--
-					yArray = append(yArray, deltaY[rowIndex][j])
-				}
-			}
+		isLessThanZero = false
+		t := (argX - xValues[n-1]) / h
+		//fmt.Printf("значение t: %f\n", t)
+		result = array[n-1][0]
+		//fmt.Printf("значение result= %f\n", result)
+		for i := 1; i < n; i++ {
+			factorial *= float64(i)
+			result += (t_calculate(t, i, isLessThanZero) * array[n-i-1][i]) / factorial
+			//fmt.Printf("значение t result= %f\n", result)
 		}
 	}
-
-	fmt.Printf("Массив y: %f\n", yArray)
-	var Nx float64
-	var tIteration float64 = 1
-	var factorial int = 1
-	Nx += y0
-	for i := 0; i < len(yArray); i++ {
-		if i != 0 {
-			if i == 0 {
-				tIteration *= t
-				Nx += yArray[i] * tIteration
-			} else {
-				if t > 0 {
-					tIteration = tIteration * (t - float64(i-1))
-				} else if t < 0 {
-					//fmt.Printf("titeration: %f", tIteration)
-					tIteration = tIteration * (t + float64(i-1))
-					//fmt.Printf("tIteration: %f", tIteration)
-				}
-				factorial *= i
-				Nx += (yArray[i] * tIteration) / float64(factorial)
-			}
-		}
-	}
-
-	fmt.Printf("Приближённое значение функции по Ньютону для равноотстоящих узлов: %f\n", Nx)
-	fmt.Println()
-	return Nx
+	return result
 }
 
-func finiteDifferences(y []float64) [][]float64 {
-	n := len(y)
-	deltaY := make([][]float64, n)
-
-	for i := range deltaY {
-		deltaY[i] = make([]float64, n)
-		deltaY[i][0] = y[i]
-	}
-
-	for j := 1; j < n; j++ {
-		for i := 0; i < n-j; i++ {
-			deltaY[i][j] = deltaY[i+1][j-1] - deltaY[i][j-1]
+func t_calculate(t float64, n int, isLessThanZero bool) float64 {
+	result := t
+	for i := 1; i < n; i++ {
+		if isLessThanZero {
+			result *= t - float64(i)
+		} else {
+			result *= t + float64(i)
 		}
 	}
-
-	return deltaY
+	return result
 }

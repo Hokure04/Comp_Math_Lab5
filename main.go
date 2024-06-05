@@ -22,10 +22,12 @@ func main() {
 
 func Function(choice int, x float64) float64 {
 	if choice == 1 {
-		return 2*math.Pow(x, 2) - 5*x
+		return math.Pow(x, 2)
 	} else if choice == 2 {
-		return math.Sin(x)
+		return 2*math.Pow(x, 2) - 5*x
 	} else if choice == 3 {
+		return math.Sin(x)
+	} else if choice == 4 {
 		return math.Sqrt(x)
 	}
 	return 0
@@ -103,8 +105,12 @@ func hand_input() {
 	}
 	fmt.Println()
 	modules.Lagrange_polynominal(xValues, yValues, floatX)
-	modules.Newton_polynomial_divided_differences(xValues, yValues, floatX)
-	modules.Newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
+	answer2 := modules.Newton_polynomial_divided_differences(xValues, yValues, floatX)
+	fmt.Printf("Приближённое значение функции по Ньютону с разделёнными разностями: %f\n", answer2)
+	fmt.Println()
+	answer3 := modules.Newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
+	fmt.Printf("Приближённое значение функции по Ньютону для равноотстоящих узлов: %f\n", answer3)
+	fmt.Println()
 }
 
 func read_from_file() {
@@ -167,9 +173,14 @@ func read_from_file() {
 			}
 			fmt.Println("Ошибка: X должно быть числом")
 		}
+		fmt.Println()
 		modules.Lagrange_polynominal(xValues, yValues, floatX)
-		modules.Newton_polynomial_divided_differences(xValues, yValues, floatX)
-		modules.Newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
+		answer2 := modules.Newton_polynomial_divided_differences(xValues, yValues, floatX)
+		fmt.Printf("Приближённое значение функции по Ньютону с разделёнными разностями: %f\n", answer2)
+		fmt.Println()
+		answer3 := modules.Newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
+		fmt.Printf("Приближённое значение функции по Ньютону для равноотстоящих узлов: %f\n", answer3)
+		fmt.Println()
 		break
 	}
 }
@@ -179,9 +190,10 @@ func input_from_function() {
 	var yValues []float64
 
 	fmt.Println("Выберите функцию, которую хотите использовать:")
-	fmt.Println("1. 2*x^2 - 5*x")
-	fmt.Println("2. sin(x)")
-	fmt.Println("3. √x")
+	fmt.Println("1. x^2")
+	fmt.Println("2. 2*x^2 - 5*x")
+	fmt.Println("3. sin(x)")
+	fmt.Println("4. √x")
 
 	for {
 		choice := bufio.NewScanner(os.Stdin)
@@ -195,8 +207,8 @@ func input_from_function() {
 			continue
 		}
 
-		if choiceInt > 3 || choiceInt < 1 {
-			fmt.Println("Введите значение от 1 до 3")
+		if choiceInt > 4 || choiceInt < 1 {
+			fmt.Println("Введите значение от 1 до 4")
 			continue
 		}
 
@@ -234,10 +246,9 @@ func input_from_function() {
 			break
 		}
 
-		h := (b - a) / float64(points-1)
-
+		//h := (b - a) / float64(points-1)
 		for i := 0; i < points; i++ {
-			xValues = append(xValues, a+h*float64(i))
+			xValues = append(xValues, a+((b-a)*float64(i))/float64(points))
 			yValues = append(yValues, Function(choiceInt, xValues[i]))
 		}
 
@@ -259,15 +270,21 @@ func input_from_function() {
 			}
 			fmt.Println("Ошибка: X должно быть числом")
 		}
+		fmt.Println()
 		modules.Lagrange_polynominal(xValues, yValues, floatX)
-		modules.Newton_polynomial_divided_differences(xValues, yValues, floatX)
-		modules.Newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
-		DrawGraph(xValues, yValues, floatX, choiceInt)
+		answer2 := modules.Newton_polynomial_divided_differences(xValues, yValues, floatX)
+		fmt.Printf("Приближённое значение функции по Ньютону с разделёнными разностями: %f\n", answer2)
+		fmt.Println()
+		answer3 := modules.Newton_polynomial_equally_spaced_notes(xValues, yValues, floatX)
+		fmt.Printf("Приближённое значение функции по Ньютону для равноотстоящих узлов: %f\n", answer3)
+		fmt.Println()
+		DrawGraph(xValues, yValues, choiceInt)
+
 		break
 	}
 }
 
-func DrawGraph(xValues, yValues []float64, argX float64, choiceInt int) {
+func DrawGraph(xValues, yValues []float64, choiceInt int) {
 	dirPath := "graphs"
 	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 		err := os.Mkdir(dirPath, 0755)
@@ -315,7 +332,7 @@ func DrawGraph(xValues, yValues []float64, argX float64, choiceInt int) {
 
 	xVals = plotter.XYs{}
 	for x := xValues[0]; x <= xValues[len(xValues)-1]; x += 0.1 {
-		xVals = append(xVals, plotter.XY{X: x, Y: newtonPolynomial(xValues, yValues, x, choiceInt)})
+		xVals = append(xVals, plotter.XY{X: x, Y: modules.Newton_polynomial_divided_differences(xValues, yValues, x)})
 	}
 
 	line, err = plotter.NewLine(xVals)
@@ -328,40 +345,4 @@ func DrawGraph(xValues, yValues []float64, argX float64, choiceInt int) {
 	if err := p.Save(6*vg.Inch, 4*vg.Inch, filePath); err != nil {
 		panic(err)
 	}
-}
-
-func newtonPolynomial(xValues, yValues []float64, argX float64, choiceInt int) float64 {
-	n := len(xValues)
-	f := divided(xValues, yValues, choiceInt)
-	for i := 0; i < n; i++ {
-		var finiteDifferences []float64
-		var intermediateCalc float64 = 1
-		for j := 0; j < i; j++ {
-			intermediateCalc *= argX - xValues[j]
-			finiteDifferences = append(finiteDifferences, intermediateCalc)
-		}
-		if i != 0 {
-			f[i] = f[i] * finiteDifferences[i-1]
-		}
-	}
-	var interpolation float64
-	for i := 0; i < len(f); i++ {
-		interpolation += f[i]
-	}
-	return interpolation
-}
-
-func divided(x, y []float64, choiceInt int) []float64 {
-	n := len(x)
-	f := make([]float64, n)
-
-	for i := 0; i < n; i++ {
-		f[i] = y[i]
-	}
-	for i := 1; i < n; i++ {
-		for j := n - 1; j >= i; j-- {
-			f[j] = (f[j] - f[j-1]) / (x[j] - x[j-i])
-		}
-	}
-	return f
 }
